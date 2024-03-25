@@ -43,3 +43,4 @@ package-lock.json
 .env
 yarn.lock
 uploads/data_upload_error.xlsx
+serviceAccountKey.json
