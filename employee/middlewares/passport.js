@@ -1,6 +1,7 @@
 'use strict';
+require('dotenv').config()
 const passport = require('passport');
-const JWTstrategy = require('passport-jwt').Strategy
+const Strategy = require('passport-jwt').Strategy
 const ExtractJWT = require('passport-jwt').ExtractJwt
 
 // Setup work and export for the JWT passport strategy
@@ -13,13 +14,12 @@ passport.deserializeUser((req, user, done) => {
 })
 
 passport.use(
-  new JWTstrategy({
-      secretOrKey: 'test',
-      jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken()
+  new Strategy({
+      jwtFromRequest: ExtractJWT.fromAuthHeaderAsBearerToken(),
+      secretOrKey: process.env.SECRET,
     },
     async (token, done) => {
       try {
-        console.log('token ini')
         let expiration_date = new Date(token.exp * 1000)
         if (expiration_date < new Date()) {
           return done(null, false)
@@ -31,3 +31,9 @@ passport.use(
     }
   )
 )
+
+const jwt_middleware = passport.authenticate('jwt', { session: false })
+
+module.exports = {
+  jwt_middleware
+}

@@ -6,12 +6,13 @@ const session = require("express-session")
 const path = require('path')
 const cors = require('cors')
 const router = require('./routes')
+const passport = require('passport');
 const {
   createClient
 } = require("redis")
 const RedisStore = require("connect-redis")(session)
 
-app.enable("trust proxy")
+// app.enable("trust proxy")
 
 app.get('/', (req, res) => {
   res.status(200).send({
@@ -48,6 +49,10 @@ app.use(
     saveUninitialized: false
   })
 )
+
+// app.use(passport.initialize());
+// app.use(passport.session());
+
 
 app.use('/api_argon/v1/auth', router)
 

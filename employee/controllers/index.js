@@ -2,6 +2,10 @@
 const Employee = require('../models/index');
 const { sendResponse, paginationResponse } = require('../helpers/response');
 const imagekit = require('../lib/imagekit');
+const Producer = require("../message-broker/producer");
+const producer = new Producer();
+const fcm = require('../lib/firebase')
+
 
 
 exports.createNewOne = async (req, res, next) => {
@@ -66,6 +70,32 @@ exports.getProfile = async (req, res, next) => {
   }
 };
 
+exports.getAbsent = async (req, res, next) => {
+  try {
+   
+    const data = {
+      id: req.params.id
+    }
+    const employee = await Employee.findAbsentById(data)
+    if (employee) {
+      const result = {
+        data: employee,
+        code: 200
+      }
+      return sendResponse(result, res);
+      
+    } else {
+      const error = new Error("User Id Not Found");
+      return next(error);
+    }
+    
+
+  } catch (err) {
+    console.log(err);
+    return next(err);
+  }
+};
+
 exports.getCustomerId = async (req, res, next) => {
   try {
    
@@ -92,7 +122,7 @@ exports.getCustomerId = async (req, res, next) => {
   }
 };
 
-exports.getCustomers = async (req, res, next) => {
+exports.getAllEmployee = async (req, res, next) => {
 
   try {
     console.log('masuk ga?')
@@ -111,7 +141,7 @@ exports.getCustomers = async (req, res, next) => {
 
      
     // List Data 
-    const resList  = await Customer.getDataPagination(showentry, page, order, key, search); 
+    const resList  = await Employee.getDataPagination(showentry, page, order, key, search); 
 
     const result = {
       code : 200,
@@ -176,10 +206,28 @@ exports.updateEmployee = async (req, res) => {
   
         const payload = req.body
         const result = await Employee.updateEmployee(
-          data.id, payload, image, {
+          data.id, payload, image.url, {
             returnOriginal: false
           }
         )
+
+        await producer.publishMessage('updateLog', result);
+
+        const message = {
+          notification: {
+            title: 'Update Employee',
+            body: `Employee ${result.name} just updated`,
+          },
+          token: 'device_token_or_registration_token',
+        };
+        
+        fcm.send(message)
+          .then(response => {
+            console.log('Successfully sent message:', response);
+          })
+          .catch(error => {
+            console.error('Error sending message:', error);
+          });
        
         return res.status(200).send({
           message: "Employee is updated",
@@ -190,8 +238,9 @@ exports.updateEmployee = async (req, res) => {
         console.log("masuk sini 2")
 
         const payload = req.body
+        console.log(payload,req.body, 'ini apyload')
         const result = await Employee.updateEmployee(
-          data.id, payload, employee.emp_photo, {
+          data.id, req.body, employee.emp_photo, {
             returnOriginal: false
           }
         )
@@ -211,7 +260,6 @@ exports.updateEmployee = async (req, res) => {
         message: "Employee is not found"
       })
     }
-    
     
   } catch (err) {
     return res.status(409).send({

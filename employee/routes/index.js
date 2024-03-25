@@ -1,15 +1,15 @@
 "use strict"
 const router = require('express').Router();
-const Attendance = require('../controllers/index.js');
-const passport = require('passport');
+const Employee = require('../controllers/index.js');
+const {jwt_middleware}= require('../middlewares/passport.js');
 const uploader = require('../middlewares/uploader')
+const jwt = require('../helpers/jwt.js')
 
-require('../middlewares/passport.js')(passport)
-
-// router.get('/', Employee.getAllProfile);
-router.get('/:id', passport.authenticate('jwt', { session: false }), Employee.getProfile);
+router.use(jwt_middleware)
+router.get('/', Employee.getAllEmployee);
+router.get('/:id', Employee.getProfile);
 router.post('/', uploader.single('image'), Employee.createNewOne);
-router.put('/:id', Attendance.absent);
+router.put('/:id', uploader.single('image'), Employee.updateEmployee);
 // router.put('/:id', Employee.deleteEmployee);
 
 module.exports = router;

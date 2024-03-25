@@ -2,39 +2,43 @@
 const Employee = require('../models/index');
 const { sendResponse, paginationResponse } = require('../helpers/response');
 const imagekit = require('../lib/imagekit');
+const isValidPassword = require('../helpers/bcrypt').checker
+const jwt = require('jsonwebtoken')
 
 
-exports.createNewOne = async (req, res, next) => {
+exports.login = async (req, res, next) => {
   try {
-    console.log('userData: ', req.body);
-    if(req.file){
-      console.log('masuk ga sini?')
-      const split = req.file.originalname.split('.');
-      const ext = split[split.length - 1];
-      const image = await imagekit.upload({
-        file: req.file.buffer,
-        fileName: `IMG-${Date.now()}.${ext}`
-      })
-
-      await Employee.createNewOne(req.body, image.url);
-      const result = {
-        message: "success create new data",
-        code: 200
-      }
-      return sendResponse(result, res);
-    } else {
-      console.log('masuk ga sini? 2')
-      await Employee.createNewOne(req.body, null);
-      const result = {
-        message: "success create new data",
-        code: 200
-      }
-      return sendResponse(result, res);
-    }
-   
-      const error = new Error("Gender Not Found");
-      return next(error);
+    const user = await Employee.findOneByEmail({
+      email: req.body.email
+    })
     
+    if (!user) {
+      console.log("masuk sini bkn?")
+      return done(null, false, {
+        message: 'User not found'
+      })
+    }
+
+    const validate = await isValidPassword(req.body.password, user.password)
+
+    if (!validate) {
+      return done(null, false, {
+        message: 'Wrong Password'
+      })
+    }
+    const body = {
+      id: user.id,
+      email: user.email
+    }
+    const token = await jwt.sign({
+      user: body
+    }, process.env.SECRET, {
+      expiresIn: 600000
+    });
+
+    return res.json({
+      token
+    })
   } catch (error) {
     return next(error);
   }

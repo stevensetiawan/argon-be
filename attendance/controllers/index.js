@@ -10,22 +10,41 @@ exports.absent = async (req, res, next) => {
     const hasAbsent = await Absent.findOneToday(id)
 
     if(hasAbsent){
-      const updateClockOut = Absent.updateClockOut(hasAbsent.id)
+      const updateClockOut = await Absent.updateClockOut(hasAbsent.id)
 
       const result = {
         message: "success update data",
+        data: updateClockOut,
         code: 200
       }
       return sendResponse(result, res)
     } else {
-      await Absent.createNewAttendance(id);
+      const createClockIn = await Absent.createNewAttendance(id);
       const result = {
         message: "success create new data",
+        data: createClockIn,
         code: 201
       }
       return sendResponse(result, res)
     }
 
+      
+    
+  } catch (error) {
+    return next(error);
+  }
+};
+
+exports.getAbsentById = async (req, res, next) => {
+  try {
+    const id = req.params.id
+    const absent = await Absent.findOneToday(id)
+
+      const result = {
+        data: absent ?? {},
+        code: 200
+      }
+      return sendResponse(result, res)
       
     
   } catch (error) {

@@ -5,6 +5,9 @@ const app = express()
 const session = require("express-session")
 const path = require('path')
 const cors = require('cors')
+const bodyParser = require('body-parser');
+const passport = require('passport');
+const cookieParser = require('cookie-parser')
 const router = require('./routes')
 const {
   createClient
@@ -12,6 +15,7 @@ const {
 const RedisStore = require("connect-redis")(session)
 
 app.enable("trust proxy")
+// app.use(cookieParser()); // read cookies (needed for auth)
 
 app.get('/', (req, res) => {
   res.status(200).send({
@@ -21,9 +25,10 @@ app.get('/', (req, res) => {
 })
 
 app.use(cors())
+// app.use(express.json())
 app.use(express.json())
 app.use(express.urlencoded({
-  extended: true
+  extended: false
 }))
 app.use(express.static(path.join(__dirname + '/public')))
 
@@ -48,6 +53,10 @@ app.use(
     saveUninitialized: false
   })
 )
+
+// initialize Passport
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 app.use('/api_argon/v1/employee', router)
 

@@ -6,6 +6,7 @@ const ExtractJWT = require('passport-jwt').ExtractJwt
 const isValidPassword = require('../helpers/bcrypt').checker
 const jwt = require('jsonwebtoken')
 const Employee = require("../models")
+const { sendResponse } = require('../helpers/response');
 
 // Setup work and export for the JWT passport strategy
 passport.serializeUser((req, user, done) => {
@@ -27,6 +28,7 @@ passport.use(
         const user = await Employee.findOneByEmail({
           email: email
         })
+        console.log(user,'ini user ya')
         
         if (!user) {
           console.log("masuk sini bkn?")
@@ -52,42 +54,6 @@ passport.use(
   )
 )
 
-exports.register = async (req, res, next) => {
-  passport.authenticate(
-    'signup', async (err, user, info) => {
-      try {
-        if (err || !user) {
-          const error = new Error('An error occurred.')
-          return next(error)
-        }
-
-        req.login(
-          user, {
-            session: true
-          },
-          async (error) => {
-            if (error) return next(error)
-            const body = {
-              id: user.id,
-              email: user.email,
-            }
-            const token = await jwt.sign({
-              user: body
-            }, process.env.SECRET, {
-              expiresIn: 60000
-            })
-            return res.json({
-              token
-            })
-          }
-        )
-      } catch (error) {
-        return next(error);
-      }
-    }
-  )(req, res, next)
-}
-
 exports.auth = async (req, res, next) => {
   passport.authenticate(
     'login',
@@ -105,24 +71,36 @@ exports.auth = async (req, res, next) => {
 
         req.login(
           user, {
-            session: true
+            session: false
           },
           async (error) => {
             if (error) return next(error);
 
             const body = {
               id: user.id,
-              email: user.email
+              email: user.email,
+              position: user.position,
+              name: user.name,
+              emp_photo: user.emp_photo
             }
-            const token = await jwt.sign({
+            body.token = await jwt.sign({
               user: body
             }, process.env.SECRET, {
               expiresIn: 600000
             });
 
-            return res.json({
-              token
-            })
+            console.log(user,'ini user')
+            console.log({
+              user: body
+            },'ini user object')
+
+            const result = {
+              err: null,
+              message: info.message,
+              data: body,
+              code: 200
+            }
+            return sendResponse(result, res);
           }
         );
       } catch (error) {

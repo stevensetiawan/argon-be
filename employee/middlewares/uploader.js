@@ -22,7 +22,8 @@ const uploadedPath = path.join(process.cwd(), 'public/travel_package')
 
 const imageUploader = multer({
     fileFilter: function (req, file, callback) {
-        let ext = path.extname(file.originalname);
+        let ext = path.extname(file.originalname).toLowerCase();
+        console.log(ext,'ini ext')
         if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
             return callback(new Error('Only images are allowed'))
         }

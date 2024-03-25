@@ -1,6 +1,7 @@
 "use strict"
 const router = require('express').Router();
 const passport = require('passport');
+const Authenticate = require('../controllers/index')
 const { auth, logout } = require('../middlewares/passport');
 
 router.post('/login', auth);

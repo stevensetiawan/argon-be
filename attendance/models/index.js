@@ -6,10 +6,11 @@ module.exports.findOneToday = async (id) => {
     throw err
 });
   try {
-    const query = `SELECT * FROM attendance_table
+    const query = `SELECT id, employee_id, TO_CHAR(time_in, 'HH24:MI') AS time_in, TO_CHAR(time_out, 'HH24:MI') AS time_out, created_At FROM attendance_table
                     WHERE employee_id = '${id}' AND DATE(created_at) = CURRENT_DATE LIMIT 1;`
     console.log("query", query);
     const res = await client.query(query);
+    console.l
     return res.rows[0];
   } catch (err) {
     console.log(err);
@@ -27,8 +28,8 @@ module.exports.createNewAttendance = async (id) => {
   });
   try {
 
-    const query = `INSERT INTO "attendance_table" (employee_id) 
-                    VALUES ('${id}');`;
+    const query = `INSERT INTO "attendance_table" (employee_id, time_in) 
+                    VALUES ('${id}', NOW()) returning *;`;
     console.log('query:', query);
     const res = await client.query(query);
     return res;
@@ -70,7 +71,7 @@ module.exports.updateClockOut = async (id) => {
   });
 
   try {
-      let query = `UPDATE attendance_table SET time_out = CURRENT_TIMESTAMP WHERE id ='${id}' returning *`;
+      let query = `UPDATE attendance_table SET time_out = NOW() WHERE id ='${id}' returning *`;
       console.log('query:', query);
       const res = await client.query(query);
       console.log('res:', res);

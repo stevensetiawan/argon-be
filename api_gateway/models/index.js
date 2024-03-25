@@ -7,7 +7,7 @@ module.exports.findOneByEmail = async (data) => {
     errConnect = err;
 });
   try {
-    const query = `SELECT * FROM employee_table
+    const query = `SELECT id, name, password, email, emp_photo, position, phone FROM employee_table
                     WHERE email = '${data.email}';`
     console.log("query", query);
     const res = await client.query(query);
